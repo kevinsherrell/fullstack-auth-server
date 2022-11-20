@@ -11,6 +11,7 @@ router.get('/', function (req, res, next) {
     res.send('respond with a resource');
 });
 
+/* POST create user*/
 router.post('/create', async (req, res) => {
     console.log("create has been called");
     let hashed;
@@ -21,14 +22,19 @@ router.post('/create', async (req, res) => {
     }
     // validate that user object is correct
     console.log("user object", userObj);
-    const validated =  validateUser(userObj);
+    const validated = validateUser(userObj);
     //
     try {
+        const userFound = await db().collection('users').findOne({email: userObj.email});
+        if (userFound !== null) {
+            return res.json({
+                success: false,
+                message: 'this email exists'
+            })
+        }
 
-        console.log(validated);
-        console.log(req.body);
         if (validated.isValid) {
-            hashed = bcrypt.hash(userObj.password, saltRounds);
+            hashed = await bcrypt.hash(userObj.password, saltRounds);
             userObj.password = hashed;
         } else {
             throw new Error("error");
@@ -42,14 +48,14 @@ router.post('/create', async (req, res) => {
                 password: userObj.password
             }
         ).then(result => {
-            res.send({
+            res.json({
                 success: true,
                 result: result
             })
         })
     } catch (error) {
         console.log(error);
-        res.send({
+        res.json({
             success: false,
             isValid: validated.isValid,
             errors: validated.errors
@@ -57,6 +63,30 @@ router.post('/create', async (req, res) => {
     }
 
 
+})
+
+/* POST login user*/
+router.post('/login', async (req, res) => {
+    console.log("loggin running");
+    const foundUser = await db().collection('users').findOne({email: req.body.email});
+    bcrypt.compare(req.body.password, foundUser.password)
+        .then(result => {
+            if (result === true) {
+                res.json({
+                    success: true
+                })
+            } else {
+                res.json({
+                    success: false
+                })
+            }
+        })
+        .catch(err => {
+            res.send({
+                success: false,
+                message: err
+            })
+        })
 })
 
 module.exports = router;
