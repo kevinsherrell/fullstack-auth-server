@@ -11,22 +11,22 @@ const jwt = require('jsonwebtoken');
 router.get('/', function (req, res, next) {
     res.send('respond with a resource');
 });
-router.get('/message', (req, res)=>{
+router.get('/message', (req, res) => {
     const token = req.header(process.env.TOKEN_HEADER_KEY);
     console.log(token);
-    const verified = jwt.verify(token,process.env.JWT_SECRET_KEY);
-    if(verified === null){
+    const verified = jwt.verify(token, process.env.JWT_SECRET_KEY);
+    if (verified === null) {
         res.json({
             success: false,
             message: 'ID token could not be verified'
         })
     }
-    if(verified && verified.userData.scope === 'user'){
+    if (verified && verified.userData.scope === 'user') {
         res.json({
             success: true,
             message: "I am a user"
         });
-    }else if(verified && verified.userData.scope === 'admin'){
+    } else if (verified && verified.userData.scope === 'admin') {
         res.json({
             success: true,
             message: "I am an admin"
@@ -35,7 +35,7 @@ router.get('/message', (req, res)=>{
     console.log(verified);
 })
 /* POST create user*/
-router.post('/create', async (req, res) => {
+router.post('/register', async (req, res) => {
     console.log("create has been called");
     let hashed;
     const userObj = {
@@ -45,6 +45,7 @@ router.post('/create', async (req, res) => {
     }
     // validate that user object is correct
     console.log("user object", userObj);
+    // console.log("req.body", req.body);
     const validated = validateUser(userObj);
     //
     try {
@@ -62,7 +63,7 @@ router.post('/create', async (req, res) => {
         } else {
             throw new Error("error");
         }
-
+        console.log("req.body",req.body);
 
         db().collection('users').insertOne(
             {
